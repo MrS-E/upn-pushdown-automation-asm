@@ -14,15 +14,16 @@ evaluate_upn_asm:
     push r14
     push r15
 
-    mov r11, rsp 
-
     mov rbx, rdi
     mov r12d, esi
     mov r13, rdx
 
-    sub rsp, 8192
-    mov r15, rsp
-    lea r14, [rsp + 8192]
+    mov rdx, rsp
+    sub rsp, 8200
+    mov [rsp], rdx
+
+    lea r15, [rsp + 8]
+    lea r14, [r15 + 8192]
     lea rsp, [r15 + 4096]
 
 .parse_loop:
@@ -54,21 +55,7 @@ evaluate_upn_asm:
 
     cmp r12d, 1
     jne .next_char
-
-    call_step_dump:
-
-    xchg rsp, r14
-
-    mov rax, rsp
-    and rsp, -16
-
-    mov rdi, r14
-    lea rsi, [r15 + 4096]
-    call step_dump
-
-    mov rsp, rax
-    xchg rsp, r14
-    jmp .next_char
+    jmp call_step_dump
 
 .check_plus:
     cmp al, '+'
@@ -78,23 +65,20 @@ evaluate_upn_asm:
     jmp .reject
 
 .do_add:
-
     lea rax, [r15 + 4096 - 16]
     cmp rsp, rax
     jg .reject
 
-    mov rcx, qword ptr [rsp]
+    mov rcx, [rsp]
     add rsp, 8
-
-    mov rax, qword ptr [rsp]
+    mov rax, [rsp]
     add rsp, 8
-
     add rax, rcx
 
     cmp rsp, r15
     jbe .reject
     sub rsp, 8
-    mov qword ptr [rsp], rax
+    mov [rsp], rax
 
     cmp r12d, 1
     jne .next_char
@@ -105,22 +89,35 @@ evaluate_upn_asm:
     cmp rsp, rax
     jg .reject
 
-    mov rcx, qword ptr [rsp]
+    mov rcx, [rsp]
     add rsp, 8
-
-    mov rax, qword ptr [rsp]
+    mov rax, [rsp]
     add rsp, 8
-
     imul rax, rcx
 
     cmp rsp, r15
     jbe .reject
     sub rsp, 8
-    mov qword ptr [rsp], rax
+    mov [rsp], rax
 
     cmp r12d, 1
     jne .next_char
     jmp call_step_dump
+
+call_step_dump:
+    xchg rsp, r14
+
+    sub rsp, 8
+    lea rdx, [rsp + 8]
+    mov [rsp], rdx
+
+    mov rdi, r14
+    lea rsi, [r15 + 4096]
+    call step_dump
+
+    mov rsp, [rsp]
+    xchg rsp, r14
+    jmp .next_char
 
 .next_char:
     inc rbx
@@ -131,9 +128,8 @@ evaluate_upn_asm:
     cmp rsp, rax
     jne .reject
 
-    mov rax, qword ptr [rsp]
-    mov qword ptr [r13], rax
-
+    mov rax, [rsp]
+    mov [r13], rax
     mov eax, 1
     jmp .finish
 
@@ -141,7 +137,8 @@ evaluate_upn_asm:
     xor eax, eax
 
 .finish:
-    mov rsp, r11 
+    lea rdx, [r15 - 8]
+    mov rsp, [rdx]
 
     pop r15
     pop r14
