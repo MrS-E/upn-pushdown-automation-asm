@@ -18,11 +18,10 @@ evaluate_upn_asm:
     mov r12d, esi
     mov r13, rdx
 
-
-    sub rsp, 4096
+    sub rsp, 8192
     mov r15, rsp
-    lea r14, [rsp + 4096]
-    mov rsp, r14
+    lea r14, [rsp + 8192]
+    lea rsp, [r15 + 4096]
 
 .parse_loop:
     movzx eax, byte ptr [rbx]
