@@ -14,6 +14,8 @@ evaluate_upn_asm:
     push r14
     push r15
 
+    mov r11, rsp 
+
     mov rbx, rdi
     mov r12d, esi
     mov r13, rdx
@@ -57,13 +59,14 @@ evaluate_upn_asm:
 
     xchg rsp, r14
 
-    sub rsp, 8
+    mov rax, rsp
+    and rsp, -16
 
-    mov rdi, r14 
+    mov rdi, r14
     lea rsi, [r15 + 4096]
     call step_dump
 
-    add rsp, 8
+    mov rsp, rax
     xchg rsp, r14
     jmp .next_char
 
@@ -138,8 +141,7 @@ evaluate_upn_asm:
     xor eax, eax
 
 .finish:
-    mov rsp, r15
-    add rsp, 4096
+    mov rsp, r11 
 
     pop r15
     pop r14
